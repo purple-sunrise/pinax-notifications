@@ -78,14 +78,14 @@ class TestProcedures(BaseTest):
         self.lang.delete()
         NoticeQueueBatch.objects.all().delete()
 
-    @override_settings(NOTIFICATION_LANGUAGE_MODULE="tests.Language")
+    @override_settings(NOTIFICATION_LANGUAGE_MODULE="notification.Language")
     def test_get_notification_language(self):
         self.assertEqual(get_notification_language(self.user), "en_US")
         self.assertRaises(LanguageStoreNotAvailable, get_notification_language, self.user2)
         del settings.NOTIFICATION_LANGUAGE_MODULE
         self.assertRaises(LanguageStoreNotAvailable, get_notification_language, self.user)
 
-    @override_settings(SITE_ID=1, NOTIFICATION_LANGUAGE_MODULE="tests.Language")
+    @override_settings(SITE_ID=1, NOTIFICATION_LANGUAGE_MODULE="notification.Language")
     def test_send_now(self):
         Site.objects.create(domain="localhost", name="localhost")
         users = [self.user, self.user2]

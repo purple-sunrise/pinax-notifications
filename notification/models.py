@@ -6,7 +6,7 @@ import base64
 from django.db import models
 from django.db.models.query import QuerySet
 from django.conf import settings
-from django.core.exceptions import ImproperlyConfigured
+from django.core.exceptions import ImproperlyConfigured, ObjectDoesNotExist
 from django.utils.translation import ugettext_lazy as _
 from django.utils.translation import get_language, activate
 from django.utils.encoding import python_2_unicode_compatible
@@ -127,7 +127,8 @@ def get_notification_language(user):
             language_model = model._default_manager.get(user__id__exact=user.id)
             if hasattr(language_model, "language"):
                 return language_model.language
-        except (ImportError, ImproperlyConfigured, model.DoesNotExist):
+        except (LookupError, ImportError,
+                ImproperlyConfigured, ObjectDoesNotExist):
             raise LanguageStoreNotAvailable
     raise LanguageStoreNotAvailable
 
