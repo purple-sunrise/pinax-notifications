@@ -1,6 +1,7 @@
 import base64
 
 from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
 from django.core import mail
 from django.utils.six.moves import cPickle as pickle
@@ -55,15 +56,21 @@ class TestNoticeType(TestCase):
 class TestNoticeSetting(BaseTest):
     def test_for_user(self):
         email_id = get_backend_id("email")
-        notice_setting = NoticeSetting.objects.create(user=self.user, notice_type=self.notice_type,
-                                                      medium=email_id, send=False)
+        user_ctype = ContentType.objects.get_for_model(self.user)
+        notice_setting = NoticeSetting.objects.create(
+            user_id=self.user.pk, user_ctype=user_ctype,
+            notice_type=self.notice_type, medium=email_id, send=False
+        )
         self.assertEqual(NoticeSetting.for_user(self.user, self.notice_type, email_id),
                          notice_setting)
 
         # test default fallback
         NoticeSetting.for_user(self.user2, self.notice_type, email_id)
-        ns2 = NoticeSetting.objects.get(user=self.user2, notice_type=self.notice_type,
-                                        medium=email_id)
+        user2_ctype = ContentType.objects.get_for_model(self.user2)
+        ns2 = NoticeSetting.objects.get(
+            user_id=self.user2.pk, user_ctype=user2_ctype,
+            notice_type=self.notice_type, medium=email_id
+        )
         self.assertTrue(ns2.send)
 
 

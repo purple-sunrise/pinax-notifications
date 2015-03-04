@@ -6,6 +6,8 @@ import base64
 from django.db import models
 from django.db.models.query import QuerySet
 from django.conf import settings
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import ugettext_lazy as _
 from django.utils.translation import get_language, activate
@@ -84,7 +86,9 @@ class NoticeSetting(models.Model):
     of a given type to a given medium.
     """
 
-    user = models.ForeignKey(AUTH_USER_MODEL, verbose_name=_("user"))
+    user_ctype = models.ForeignKey(ContentType)
+    user_id = models.PositiveIntegerField()
+    user = GenericForeignKey('user_ctype', 'user_id')
     notice_type = models.ForeignKey(NoticeType, verbose_name=_("notice type"))
     medium = models.CharField(_("medium"), max_length=1, choices=NOTICE_MEDIA)
     send = models.BooleanField(_("send"), default=False)
@@ -92,15 +96,16 @@ class NoticeSetting(models.Model):
     class Meta:
         verbose_name = _("notice setting")
         verbose_name_plural = _("notice settings")
-        unique_together = ("user", "notice_type", "medium")
+        unique_together = ("user_id", "user_ctype", "notice_type", "medium")
 
     @classmethod
     def for_user(cls, user, notice_type, medium):
+        user_ctype = ContentType.objects.get_for_model(user)
         try:
-            return cls._default_manager.get(user=user, notice_type=notice_type, medium=medium)
+            return cls._default_manager.get(user_id=user.pk, user_ctype=user_ctype, notice_type=notice_type, medium=medium)
         except cls.DoesNotExist:
             default = (NOTICE_MEDIA_DEFAULTS[medium] <= notice_type.default)
-            setting = cls(user=user, notice_type=notice_type, medium=medium, send=default)
+            setting = cls(user_id=user.pk, user_ctype=user_ctype, notice_type=notice_type, medium=medium, send=default)
             setting.save()
             return setting
 
