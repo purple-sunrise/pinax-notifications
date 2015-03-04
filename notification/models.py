@@ -15,7 +15,6 @@ from django.utils.encoding import python_2_unicode_compatible
 from django.utils.six.moves import cPickle as pickle  # pylint: disable-msg=F
 
 from . import backends
-from .compat import AUTH_USER_MODEL
 
 
 DEFAULT_QUEUE_ALL = False
